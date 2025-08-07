@@ -80,3 +80,33 @@ cce-db-reset() {
 
 alias cce-super="~/.cce-universal/templates/create-super-app.sh"
 alias cce-auth="~/.cce-universal/generators/auth/nextauth-generator.sh"
+
+# MCP Servers
+alias cce-mcp='~/.cce-universal/mcp/mcp-manager.sh'
+
+# Agents
+alias cce-agent='~/.cce-universal/agents/agent-manager.sh'
+alias cce-multi-agent='~/.cce-universal/agents/multi-agent.sh'
+
+# Agent shortcuts
+alias cce-coder='cce-agent coder'
+alias cce-review='cce-agent reviewer'
+alias cce-test='cce-agent tester'
+alias cce-docs='cce-agent documenter'
+alias cce-debug='cce-agent debugger'
+alias cce-deploy='cce-agent deployer'
+
+# MCP Servers
+alias cce-mcp='~/.cce-universal/mcp/mcp-manager.sh'
+
+# Agents
+alias cce-agent='~/.cce-universal/agents/agent-manager.sh'
+alias cce-multi-agent='~/.cce-universal/agents/multi-agent.sh'
+
+# Agent shortcuts
+alias cce-coder='cce-agent coder'
+alias cce-review='cce-agent reviewer'
+alias cce-test='cce-agent tester'
+alias cce-docs='cce-agent documenter'
+alias cce-debug='cce-agent debugger'
+alias cce-deploy='cce-agent deployer'
