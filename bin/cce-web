@@ -1,0 +1,200 @@
+#!/usr/bin/env bash
+# CCE Web Interface Manager
+
+CCE_WEB_DIR=~/.cce-universal/web
+PID_FILE="$CCE_WEB_DIR/server.pid"
+LOG_FILE="$CCE_WEB_DIR/server.log"
+
+# Detect if we're in WSL
+is_wsl() {
+    grep -qi microsoft /proc/version 2>/dev/null
+}
+
+# Find free port
+find_free_port() {
+    local port=3456
+    while lsof -Pi :$port -sTCP:LISTEN -t >/dev/null 2>&1; do
+        port=$((port + 1))
+    done
+    echo $port
+}
+
+start_server() {
+    if [ -f "$PID_FILE" ]; then
+        PID=$(cat "$PID_FILE")
+        if ps -p $PID > /dev/null 2>&1; then
+            echo "❌ Server already running (PID: $PID)"
+            echo "   URL: http://localhost:$(get_port)"
+            return 1
+        fi
+    fi
+    
+    # Check if dependencies are installed
+    if [ ! -d "$CCE_WEB_DIR/node_modules" ]; then
+        echo "📦 Installing dependencies..."
+        cd "$CCE_WEB_DIR" && npm install --silent
+    fi
+    
+    # Find free port
+    PORT=$(find_free_port)
+    export CCE_WEB_PORT=$PORT
+    
+    echo "🚀 Starting CCE Web Server..."
+    cd "$CCE_WEB_DIR"
+    nohup node server/index.js > "$LOG_FILE" 2>&1 &
+    PID=$!
+    echo $PID > "$PID_FILE"
+    
+    # Wait for server to start
+    sleep 2
+    
+    if ps -p $PID > /dev/null; then
+        URL="http://localhost:$PORT"
+        echo "✅ Server started successfully"
+        echo "   PID: $PID"
+        echo "   URL: $URL"
+        echo "   Logs: $LOG_FILE"
+        
+        # Open browser if in WSL
+        if is_wsl && command -v cmd.exe >/dev/null; then
+            echo "🌐 Opening browser..."
+            cmd.exe /c start "$URL" 2>/dev/null
+        elif command -v xdg-open >/dev/null; then
+            xdg-open "$URL" 2>/dev/null
+        fi
+    else
+        echo "❌ Failed to start server"
+        echo "   Check logs: $LOG_FILE"
+        rm -f "$PID_FILE"
+        return 1
+    fi
+}
+
+stop_server() {
+    if [ ! -f "$PID_FILE" ]; then
+        echo "❌ Server not running"
+        return 1
+    fi
+    
+    PID=$(cat "$PID_FILE")
+    if ps -p $PID > /dev/null 2>&1; then
+        echo "🛑 Stopping server (PID: $PID)..."
+        kill $PID
+        rm -f "$PID_FILE"
+        echo "✅ Server stopped"
+    else
+        echo "⚠️  Server not running, cleaning up..."
+        rm -f "$PID_FILE"
+    fi
+}
+
+restart_server() {
+    stop_server
+    sleep 1
+    start_server
+}
+
+server_status() {
+    if [ -f "$PID_FILE" ]; then
+        PID=$(cat "$PID_FILE")
+        if ps -p $PID > /dev/null 2>&1; then
+            PORT=$(get_port)
+            echo "✅ Server is running"
+            echo "   PID: $PID"
+            echo "   URL: http://localhost:$PORT"
+            echo "   Uptime: $(ps -o etime= -p $PID | xargs)"
+            
+            # Check API health
+            if curl -s "http://localhost:$PORT/api/v1/health" > /dev/null; then
+                echo "   API: ✓ Healthy"
+            else
+                echo "   API: ✗ Not responding"
+            fi
+        else
+            echo "❌ Server not running (stale PID file)"
+            rm -f "$PID_FILE"
+        fi
+    else
+        echo "❌ Server not running"
+    fi
+}
+
+get_port() {
+    # Try to get port from running process
+    if [ -f "$PID_FILE" ]; then
+        PID=$(cat "$PID_FILE")
+        PORT=$(lsof -p $PID -P -n 2>/dev/null | grep LISTEN | awk '{print $9}' | cut -d: -f2 | head -1)
+        echo ${PORT:-3456}
+    else
+        echo "3456"
+    fi
+}
+
+view_logs() {
+    if [ -f "$LOG_FILE" ]; then
+        tail -f "$LOG_FILE"
+    else
+        echo "❌ No log file found"
+    fi
+}
+
+develop_mode() {
+    echo "🔧 Starting in development mode..."
+    cd "$CCE_WEB_DIR"
+    
+    if [ ! -d "node_modules" ]; then
+        echo "📦 Installing dependencies..."
+        npm install
+    fi
+    
+    # Install nodemon if not present
+    if ! command -v nodemon >/dev/null 2>&1; then
+        echo "📦 Installing nodemon..."
+        npm install -g nodemon
+    fi
+    
+    echo "👀 Watching for changes..."
+    export CCE_WEB_PORT=$(find_free_port)
+    nodemon server/index.js
+}
+
+case "$1" in
+    start)
+        start_server
+        ;;
+    stop)
+        stop_server
+        ;;
+    restart)
+        restart_server
+        ;;
+    status)
+        server_status
+        ;;
+    logs)
+        view_logs
+        ;;
+    dev)
+        develop_mode
+        ;;
+    *)
+        echo "CCE Web Interface Manager"
+        echo "========================"
+        echo ""
+        echo "Usage: cce-web {start|stop|restart|status|logs|dev}"
+        echo ""
+        echo "Commands:"
+        echo "  start    - Start the web server"
+        echo "  stop     - Stop the web server"
+        echo "  restart  - Restart the web server"
+        echo "  status   - Check server status"
+        echo "  logs     - View server logs"
+        echo "  dev      - Start in development mode with auto-reload"
+        echo ""
+        echo "API Endpoints:"
+        echo "  http://localhost:3456/api/v1/health  - Health check"
+        echo "  http://localhost:3456/api/v1/system  - System info"
+        echo "  http://localhost:3456/api/v1/projects - List projects"
+        echo "  http://localhost:3456/api/v1/config  - Get configuration"
+        ;;
+esac

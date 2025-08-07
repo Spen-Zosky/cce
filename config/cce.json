@@ -1,0 +1,31 @@
+{
+  "version": "1.0.0",
+  "type": "universal",
+  "features": {
+    "autoDetect": true,
+    "crossPlatform": true,
+    "syncEnabled": true
+  },
+  "environments": {
+    "wsl": {
+      "pathSeparator": "/",
+      "lineEnding": "auto",
+      "gitConfig": {
+        "core.autocrlf": "input"
+      }
+    },
+    "vm": {
+      "pathSeparator": "/",
+      "lineEnding": "lf"
+    },
+    "native": {
+      "pathSeparator": "/",
+      "lineEnding": "lf"
+    }
+  },
+  "sync": {
+    "method": "git",
+    "remote": "",
+    "autoSync": false
+  }
+}
