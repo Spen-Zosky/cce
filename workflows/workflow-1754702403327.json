@@ -1,0 +1,24 @@
+{
+  "id": "workflow-1754702403327",
+  "name": "Test Workflow",
+  "description": "A simple test workflow",
+  "nodes": [
+    {
+      "id": "1",
+      "type": "agent",
+      "position": {
+        "x": 250,
+        "y": 100
+      },
+      "data": {
+        "label": "Test Coder",
+        "agentType": "coder",
+        "description": "Test coder agent"
+      }
+    }
+  ],
+  "edges": [],
+  "created": "2025-08-09T01:20:03.327Z",
+  "modified": "2025-08-09T01:20:03.327Z",
+  "executions": 0
+}

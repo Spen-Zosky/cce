@@ -1,0 +1,232 @@
+#!/bin/bash
+# Individual MCP Server Tester for CCE Dashboard API
+
+MCP_SERVERS_DIR="$HOME/.cce-universal/mcp-servers"
+CLAUDE_MCP_CONFIG="$HOME/.claude/claude_desktop_config.json"
+
+# Get server name from argument
+SERVER_NAME="$1"
+
+if [ -z "$SERVER_NAME" ]; then
+    echo "❌ Error: Please specify an MCP server name"
+    echo "Usage: cce-mcp-test <server-name>"
+    echo "Available servers: filesystem, github, memory, everything, sequential-thinking, fetch, sentry, firecrawl, postgresql"
+    exit 1
+fi
+
+echo "🧪 Testing MCP Server: $SERVER_NAME"
+echo "=================================="
+
+# Check if server is installed
+check_server_installed() {
+    local server=$1
+    case "$server" in
+        filesystem|github|memory|everything|sequential-thinking)
+            [ -d "$MCP_SERVERS_DIR/node_modules/@modelcontextprotocol/server-$server" ]
+            ;;
+        fetch)
+            [ -d "$MCP_SERVERS_DIR/node_modules/@mokei/mcp-fetch" ]
+            ;;
+        sentry)
+            [ -d "$MCP_SERVERS_DIR/node_modules/@sentry/mcp-server" ]
+            ;;
+        firecrawl)
+            [ -d "$MCP_SERVERS_DIR/node_modules/firecrawl-mcp" ]
+            ;;
+        postgresql)
+            [ -d "$MCP_SERVERS_DIR/node_modules/postgres-mcp-server" ]
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
+# Get server package path
+get_server_path() {
+    local server=$1
+    case "$server" in
+        filesystem|github|memory|everything|sequential-thinking)
+            echo "$MCP_SERVERS_DIR/node_modules/@modelcontextprotocol/server-$server"
+            ;;
+        fetch)
+            echo "$MCP_SERVERS_DIR/node_modules/@mokei/mcp-fetch"
+            ;;
+        sentry)
+            echo "$MCP_SERVERS_DIR/node_modules/@sentry/mcp-server"
+            ;;
+        firecrawl)
+            echo "$MCP_SERVERS_DIR/node_modules/firecrawl-mcp"
+            ;;
+        postgresql)
+            echo "$MCP_SERVERS_DIR/node_modules/postgres-mcp-server"
+            ;;
+    esac
+}
+
+# Test 1: Check if server is installed
+echo "📦 Checking installation..."
+if check_server_installed "$SERVER_NAME"; then
+    echo "✅ Server '$SERVER_NAME' is installed"
+    SERVER_PATH=$(get_server_path "$SERVER_NAME")
+    echo "   Path: $SERVER_PATH"
+else
+    echo "❌ Server '$SERVER_NAME' is not installed"
+    echo ""
+    echo "💡 To install this server, run:"
+    echo "   cce-mcp install $SERVER_NAME"
+    exit 1
+fi
+
+# Test 2: Check Claude configuration
+echo ""
+echo "🔧 Checking Claude MCP configuration..."
+if [ -f "$CLAUDE_MCP_CONFIG" ]; then
+    echo "✅ Claude MCP config file exists"
+    
+    # Check if server is configured
+    if grep -q "\"$SERVER_NAME\"" "$CLAUDE_MCP_CONFIG" 2>/dev/null; then
+        echo "✅ Server '$SERVER_NAME' is configured in Claude"
+    else
+        echo "⚠️  Server '$SERVER_NAME' not found in Claude configuration"
+        echo "   You may need to update the configuration"
+    fi
+else
+    echo "❌ Claude MCP configuration file not found"
+    echo "   Expected: $CLAUDE_MCP_CONFIG"
+    echo ""
+    echo "💡 To create the configuration, run:"
+    echo "   cce-mcp setup"
+    exit 1
+fi
+
+# Test 3: Check package.json and executable
+echo ""
+echo "📋 Checking package details..."
+PACKAGE_JSON="$SERVER_PATH/package.json"
+if [ -f "$PACKAGE_JSON" ]; then
+    echo "✅ package.json found"
+    
+    # Get version if available
+    if command -v jq >/dev/null 2>&1; then
+        VERSION=$(jq -r '.version // "unknown"' "$PACKAGE_JSON" 2>/dev/null)
+        echo "   Version: $VERSION"
+        
+        NAME=$(jq -r '.name // "unknown"' "$PACKAGE_JSON" 2>/dev/null)
+        echo "   Package: $NAME"
+    fi
+else
+    echo "⚠️  package.json not found at $PACKAGE_JSON"
+fi
+
+# Test 4: Check if main executable exists
+echo ""
+echo "🔍 Checking executable..."
+if [ -f "$SERVER_PATH/dist/index.js" ]; then
+    echo "✅ Main executable found: dist/index.js"
+elif [ -f "$SERVER_PATH/index.js" ]; then
+    echo "✅ Main executable found: index.js" 
+else
+    echo "⚠️  Main executable not found"
+    echo "   Looked for: dist/index.js, index.js"
+fi
+
+# Test 5: Test basic server startup (with timeout)
+echo ""
+echo "🚀 Testing server startup..."
+
+case "$SERVER_NAME" in
+    filesystem)
+        echo "💡 Filesystem server requires FILESYSTEM_ROOT environment variable"
+        if [ -z "$FILESYSTEM_ROOT" ]; then
+            echo "   Setting FILESYSTEM_ROOT=$HOME for test"
+            export FILESYSTEM_ROOT="$HOME"
+        fi
+        ;;
+    github)
+        if [ -z "$GITHUB_TOKEN" ]; then
+            echo "⚠️  GITHUB_TOKEN not set - server may not work fully"
+        else
+            echo "✅ GITHUB_TOKEN is configured"
+        fi
+        ;;
+    postgresql)
+        if [ -z "$DATABASE_URL" ]; then
+            echo "⚠️  DATABASE_URL not set - server may not work"
+        else
+            echo "✅ DATABASE_URL is configured"
+        fi
+        ;;
+    sentry)
+        if [ -z "$SENTRY_AUTH_TOKEN" ]; then
+            echo "⚠️  SENTRY_AUTH_TOKEN not set - server may not work"
+        else
+            echo "✅ SENTRY environment variables configured"
+        fi
+        ;;
+    firecrawl)
+        if [ -z "$FIRECRAWL_API_KEY" ]; then
+            echo "⚠️  FIRECRAWL_API_KEY not set - server may not work"
+        else
+            echo "✅ FIRECRAWL_API_KEY is configured"
+        fi
+        ;;
+esac
+
+# Try to run the server with a quick test
+echo ""
+echo "🧪 Attempting basic server test..."
+echo "   (This may take a few seconds...)"
+
+# Create a simple test to see if the server can start
+if [ -f "$SERVER_PATH/dist/index.js" ]; then
+    EXEC_PATH="$SERVER_PATH/dist/index.js"
+elif [ -f "$SERVER_PATH/index.js" ]; then
+    EXEC_PATH="$SERVER_PATH/index.js"
+else
+    echo "❌ Cannot test - executable not found"
+    exit 1
+fi
+
+# Run the server for 3 seconds to see if it starts without immediate errors
+timeout 3s node "$EXEC_PATH" >/dev/null 2>&1 &
+SERVER_PID=$!
+sleep 1
+
+# Check if process is still running (means it started successfully)
+if kill -0 $SERVER_PID 2>/dev/null; then
+    echo "✅ Server starts successfully"
+    kill $SERVER_PID 2>/dev/null
+    wait $SERVER_PID 2>/dev/null
+else
+    echo "⚠️  Server may have startup issues (check environment variables)"
+fi
+
+echo ""
+echo "📊 Test Summary for '$SERVER_NAME':"
+echo "=================================="
+
+if check_server_installed "$SERVER_NAME"; then
+    echo "✅ Installation: OK"
+else
+    echo "❌ Installation: MISSING"
+fi
+
+if [ -f "$CLAUDE_MCP_CONFIG" ]; then
+    echo "✅ Claude Config: EXISTS"
+else
+    echo "❌ Claude Config: MISSING"
+fi
+
+if [ -f "$SERVER_PATH/dist/index.js" ] || [ -f "$SERVER_PATH/index.js" ]; then
+    echo "✅ Executable: FOUND"
+else
+    echo "❌ Executable: MISSING"
+fi
+
+echo ""
+echo "💡 Quick Usage Test:"
+echo "   claude --mcp-config ~/.claude/claude_desktop_config.json -p \"Using the $SERVER_NAME MCP, help me test this server\""
+
+echo ""
+echo "🎉 Test completed for MCP server: $SERVER_NAME"
