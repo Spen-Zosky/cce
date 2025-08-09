@@ -1,0 +1,47 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "node",
+      "args": ["/home/ubuntu/.cce-universal/mcp-servers/node_modules/@modelcontextprotocol/server-filesystem/dist/index.js"],
+      "env": {
+        "FILESYSTEM_ROOT": "/home/ubuntu",
+        "FILESYSTEM_WATCH": "true"
+      }
+    },
+    "git": {
+      "command": "node",
+      "args": ["/home/ubuntu/.cce-universal/mcp-servers/node_modules/@modelcontextprotocol/server-git/dist/index.js"],
+      "env": {
+        "GIT_SAFE_MODE": "false"
+      }
+    },
+    "shell": {
+      "command": "node",
+      "args": ["/home/ubuntu/.cce-universal/mcp-servers/node_modules/@anthropic/server-shell/dist/index.js"],
+      "env": {
+        "SHELL_SAFE_MODE": "false",
+        "SHELL_WORKING_DIR": "/home/ubuntu"
+      }
+    },
+    "github": {
+      "command": "node",
+      "args": ["/home/ubuntu/.cce-universal/mcp-servers/node_modules/@modelcontextprotocol/server-github/dist/index.js"],
+      "env": {
+        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+      }
+    },
+    "search": {
+      "command": "npx",
+      "args": ["mcp-server-search"],
+      "env": {
+        "SEARCH_PATHS": "/home/ubuntu/projects:/home/ubuntu/workspace",
+        "SEARCH_EXTENSIONS": ".py,.js,.ts,.jsx,.tsx,.java,.go,.rs,.cpp,.c,.h"
+      }
+    }
+  },
+  "globalSettings": {
+    "logLevel": "info",
+    "timeout": 30000,
+    "maxRetries": 3
+  }
+}

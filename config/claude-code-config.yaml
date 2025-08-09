@@ -1,0 +1,57 @@
+# Claude Code CLI Configuration - User Level
+# This configuration applies to all projects unless overridden
+
+# API Configuration
+api:
+  model: claude-3-5-sonnet-20241022
+  max_tokens: 8192
+  temperature: 0.2
+
+# MCP Servers Integration
+mcp:
+  config_path: "/home/ubuntu/.cce-universal/config/mcp-config.json"
+  enabled: true
+  auto_start: true
+
+# File Management
+files:
+  max_file_size: 1048576  # 1MB
+  exclude_patterns:
+    - "*.pyc"
+    - "__pycache__"
+    - "node_modules"
+    - ".git"
+    - "*.log"
+    - "dist"
+    - "build"
+    - ".env*"
+
+# Project Defaults
+project:
+  auto_detect: true
+  context_files:
+    - "README.md"
+    - "package.json"
+    - "requirements.txt"
+    - "pyproject.toml"
+    - "Cargo.toml"
+    - "go.mod"
+
+# Tools & Agents
+tools:
+  enable_web_search: false
+  enable_code_execution: true
+  enable_file_operations: true
+
+# Logging
+logging:
+  level: info
+  file: "/home/ubuntu/.cce-universal/logs/claude-code.log"
+  max_size: 10485760  # 10MB
+  rotate: true
+
+# Performance
+performance:
+  cache_enabled: true
+  cache_dir: "/home/ubuntu/.cce-universal/cache"
+  parallel_requests: 3

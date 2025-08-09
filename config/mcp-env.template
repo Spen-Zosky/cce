@@ -1,0 +1,58 @@
+# CCE MCP Environment Variables Template
+# Copy this file to ~/.bashrc or ~/.zshrc and update with your actual values
+
+# ======================================
+# GitHub Integration (Required for github MCP server)
+# ======================================
+# Get your token from: https://github.com/settings/tokens
+# Permissions needed: repo, read:user, read:org
+# export GITHUB_TOKEN="ghp_your_github_personal_access_token_here"
+
+# ======================================
+# PostgreSQL Database (Required for postgresql MCP server)
+# ======================================
+# Format: postgresql://username:password@hostname:port/database
+# Example: postgresql://user:pass@localhost:5432/mydb
+# export DATABASE_URL="postgresql://username:password@hostname:port/database"
+
+# ======================================
+# Sentry Error Monitoring (Required for sentry MCP server)
+# ======================================
+# Get these from your Sentry project settings
+# export SENTRY_AUTH_TOKEN="your_sentry_auth_token_here"
+# export SENTRY_ORG="your_sentry_org_slug"
+# export SENTRY_PROJECT="your_sentry_project_slug"
+
+# ======================================
+# Firecrawl Web Scraping (Required for firecrawl MCP server)
+# ======================================
+# Get your API key from: https://firecrawl.dev/
+# export FIRECRAWL_API_KEY="fc-your_firecrawl_api_key_here"
+
+# ======================================
+# Optional: Claude API Configuration
+# ======================================
+# Your Anthropic API key (if not already set)
+# export ANTHROPIC_API_KEY="your_anthropic_api_key_here"
+
+# ======================================
+# CCE Configuration
+# ======================================
+# CCE installation directory (usually auto-detected)
+export CCE_HOME="$HOME/.cce-universal"
+
+# Environment type (auto-detected, but can override)
+# export CCE_ENV="wsl"  # or "vm" or "native"
+
+# Architecture (auto-detected, but can override)  
+# export CCE_ARCH="amd64"  # or "arm64"
+
+# ======================================
+# Instructions
+# ======================================
+# 1. Copy the lines you need (uncomment by removing #)
+# 2. Replace placeholder values with your actual credentials
+# 3. Add to your shell profile:
+#    echo 'source ~/.cce-universal/config/mcp-env.template' >> ~/.bashrc
+#    source ~/.bashrc
+# 4. Test with: cce-mcp test

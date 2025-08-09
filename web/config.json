@@ -1,6 +1,6 @@
 {
   "server": {
-    "port": "auto",
+    "port": 3456,
     "host": "localhost",
     "autoOpen": true,
     "cors": {
