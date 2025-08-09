@@ -109,10 +109,11 @@ export async function POST(request: Request) {
 }
 APIROUTE
 
-# Create CCE context
-mkdir -p .claude
-cat > .claude/CLAUDE.md << 'CLAUDEMD'
-# Next.js + PostgreSQL Project
+# Initialize CCE in project
+~/.cce-universal/scripts/init-project.sh .
+
+# Update project CLAUDE.md
+cat >> .claude/CLAUDE.md << 'CLAUDEMD'
 
 ## Tech Stack
 - Next.js 14 (App Router)
@@ -142,6 +143,7 @@ Schema includes User and Post models.
 Ready for Vercel deployment with PostgreSQL on Supabase/Neon.
 CLAUDEMD
 
+echo ""
 echo "✅ Next.js + PostgreSQL project created!"
 echo ""
 echo "Next steps:"
@@ -149,3 +151,4 @@ echo "1. cd $PROJECT_NAME"
 echo "2. Update DATABASE_URL in .env.local"
 echo "3. npx prisma migrate dev --name init"
 echo "4. npm run dev"
+echo "5. Open http://localhost:3000"

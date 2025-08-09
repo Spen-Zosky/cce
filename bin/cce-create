@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+# CCE Project Template Manager
+
+TEMPLATES_DIR=~/.cce-universal/templates
+
+list_templates() {
+    echo "Available CCE Templates:"
+    echo "======================="
+    echo ""
+    echo "📦 Web Applications:"
+    echo "  nextjs-postgres  - Next.js 14 + PostgreSQL + Prisma"
+    echo "  react-spa        - React SPA with TypeScript"
+    echo ""
+    echo "🔌 API Services:"
+    echo "  python-fastapi   - Python FastAPI + SQLAlchemy"
+    echo ""
+    echo "Usage:"
+    echo "  cce-create <template> [project-name]"
+    echo ""
+    echo "Examples:"
+    echo "  cce-create nextjs-postgres my-app"
+    echo "  cce-create react-spa my-frontend"
+    echo "  cce-create python-fastapi my-api"
+}
+
+create_project() {
+    local template="$1"
+    local project_name="$2"
+    
+    if [ -z "$template" ]; then
+        list_templates
+        return 0
+    fi
+    
+    local template_script="$TEMPLATES_DIR/${template}.sh"
+    
+    if [ ! -f "$template_script" ]; then
+        echo "❌ Template '$template' not found"
+        echo ""
+        list_templates
+        return 1
+    fi
+    
+    echo "🚀 Creating project using template: $template"
+    echo ""
+    
+    # Execute template script
+    bash "$template_script" "$project_name"
+    
+    echo ""
+    echo "✅ Project creation complete!"
+    echo "💡 Use 'cc' or 'claude' to start working with Claude AI"
+}
+
+# Quick winner shortcut
+quick_winner() {
+    echo "🏆 Creating Quick Winner Project..."
+    echo "   Template: Next.js + PostgreSQL + Prisma"
+    echo ""
+    
+    local project_name="${1:-quick-winner-$(date +%Y%m%d-%H%M)}"
+    create_project "nextjs-postgres" "$project_name"
+    
+    if [ $? -eq 0 ]; then
+        echo ""
+        echo "🎉 Quick Winner project ready!"
+        echo "   Perfect for rapid MVP development"
+        echo ""
+        echo "🚀 Next steps:"
+        echo "   1. cd $project_name"
+        echo "   2. Update .env.local with your database URL"
+        echo "   3. npx prisma migrate dev --name init"
+        echo "   4. npm run dev"
+        echo "   5. Start building with 'cc' (Claude)"
+    fi
+}
+
+case "$1" in
+    list|ls|--list)
+        list_templates
+        ;;
+    quick|winner|quick-winner)
+        shift
+        quick_winner "$@"
+        ;;
+    *)
+        create_project "$@"
+        ;;
+esac
